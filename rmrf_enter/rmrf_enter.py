@@ -24,8 +24,7 @@ def delete(path):
 
 def do_stuff(files_to_delete):
     for action, dir_root, picker in files_to_delete:
-        print(action)
         for fname in os.listdir(dir_root):
             if picker(fname):
-                print("* " + fname)
+                print(action + ": " + fname)
                 eval(action)(os.path.join(dir_root, fname))
