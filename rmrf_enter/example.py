@@ -11,6 +11,8 @@ def files_to_delete():
     """a list of triplets of `action`, `directory`, and a callable
     that returns True if the action should be performed on that file."""
     return [
+        # this triplet will delete all files in the /tmp/ directory whose 
+        # filename contains the substring "harhar"
         ("delete", "/tmp/", lambda fname: looks_funny(fname),
     ]
 
