@@ -10,6 +10,14 @@ future.
 
     $ python setup.py install
 
+or installing via pip:
+
+    pip install git+https://github.com/elifesciences/rmrf_enter.git@master
+
+or in your `requirements.txt` file:
+
+    git+https://github.com/elifesciences/rmrf_enter.git@master
+
 ## usage
 
 See `example.py` for example usage of `rmrf_enter.py`.
