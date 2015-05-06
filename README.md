@@ -26,6 +26,9 @@ or in your `requirements.txt` file:
 
 See `example.py` for example usage of `rmrf_enter.py`.
 
+This script is being used within the (private) `elife-builder` repo to 
+periodically delete temporary files and backups.
+
 ## Copyright & Licence
 
 Copyright 2015 eLife Sciences. Licensed under the [GPLv3](gpl.txt)
