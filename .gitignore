@@ -1,0 +1,13 @@
+*.pyc
+*~
+*.sqlite*
+*.orig
+*.log
+*.swp
+media/**
+collected-static/**
+elife-articles
+venv
+*egg-info
+dist/*
+build/*
