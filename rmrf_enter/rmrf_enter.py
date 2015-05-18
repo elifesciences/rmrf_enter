@@ -11,7 +11,33 @@ future.
 
 see `example.py` for example usage of `rmrf_enter.py`"""
 
-import os
+import os, re
+from datetime import datetime, timedelta
+import logging
+
+logger = logging.getLogger(__name__)
+
+## common utilities
+
+def ymd(string):
+    cregex = re.compile(r".*(?P<dt>\d{4}-\d{2}-\d{2}).*")
+    matches = cregex.match(string)
+    if matches:
+        return matches.groups()[0]
+
+def has_ymd_pattern(string):
+    return ymd(string) != None
+
+def older_than_N_days(fname, days=7):
+    val = ymd(fname) # looks like: '2015-31-01'
+    try:
+        dt = datetime.strptime(val, '%Y-%m-%d')
+        now = datetime.now()
+        N_days_ago = timedelta(days=days)
+        return dt < (now - N_days_ago)
+    except ValueError:
+        logger.warn("filename has a matching YMD string, but a date cannot be parsed from it: %s" % fname)
+
 
 ## actions
 
