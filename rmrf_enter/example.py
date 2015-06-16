@@ -13,7 +13,7 @@ def files_to_delete():
     return [
         # this triplet will delete all files in the /tmp/ directory whose 
         # filename contains the substring "harhar"
-        ("delete", "/tmp/", lambda fname: looks_funny(fname)),
+        ("delete", "/tmp/", looks_funny),
     ]
 
 if __name__ == '__main__':
