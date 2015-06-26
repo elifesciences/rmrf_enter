@@ -11,11 +11,19 @@ future.
 
 see `example.py` for example usage of `rmrf_enter.py`"""
 
-import os, re
+import os, re, shutil
 from datetime import datetime, timedelta
 import logging
 
+FORMAT = logging.Formatter("%(created)f - %(levelname)s - %(processName)s - %(name)s - %(message)s")
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# StreamHandler sends to stderr by default
+h = logging.StreamHandler()
+h.setFormatter(FORMAT)
+
+logger.addHandler(h)
 
 ## common utilities
 
@@ -44,6 +52,8 @@ def older_than_N_days(fname, days=7):
 def delete(path):
     if os.path.isfile(path):
         return os.unlink(path)
+    elif os.path.isdir(path):
+        return shutil.rmtree(path)
     raise ValueError("we only delete individual files right now!")
 
 ## do-er
@@ -52,5 +62,5 @@ def do_stuff(files_to_delete):
     for action, dir_root, picker in files_to_delete:
         for fname in os.listdir(dir_root):
             if picker(fname):
-                print(action + ": " + fname)
+                logger.info(action + ": " + fname)
                 eval(action)(os.path.join(dir_root, fname))
