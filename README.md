@@ -3,8 +3,6 @@
 `rmrf_enter.py` is a simple runner for scripts that describe which files they 
 want to delete. 
 
-__It does not delete directories.__
-
 __It does not delete files within sub-directories.__
 
 Right now it's just deletables, but I might introduce other actions in the 
