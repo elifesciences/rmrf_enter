@@ -51,8 +51,10 @@ def older_than_N_days(fname, days=7):
 
 def delete(path):
     if os.path.isfile(path):
+        logger.info("deleting FILE: " + path)
         return os.unlink(path)
     elif os.path.isdir(path):
+        logger.info("deleting DIR : " + path)
         return shutil.rmtree(path)
     raise ValueError("we only delete individual files right now!")
 
@@ -62,5 +64,4 @@ def do_stuff(files_to_delete):
     for action, dir_root, picker in files_to_delete:
         for fname in os.listdir(dir_root):
             if picker(fname):
-                logger.info(action + ": " + fname)
                 eval(action)(os.path.join(dir_root, fname))

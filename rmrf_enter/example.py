@@ -3,6 +3,8 @@ __licence__ = "GPLv3"
 __copyright__ = "eLife Sciences"
 __description__ = "example usage of rmrf_enter.py"
 
+import os
+
 def looks_funny(fname):
     "returns `True` if the sub string 'harhar' is found in the given filename"
     return "harhar" in fname
@@ -16,6 +18,13 @@ def files_to_delete():
         ("delete", "/tmp/", lambda fname: looks_funny(fname)),
     ]
 
+def touch(fname, times=None):
+    with open(fname, 'a'):
+        os.utime(fname, times)
+
 if __name__ == '__main__':
     import rmrf_enter
+    touch("/tmp/fooharharbar")
+    os.mkdir("/tmp/barharharfoo")
+    touch("/tmp/barharharfoo/baz")
     rmrf_enter.do_stuff(files_to_delete())
