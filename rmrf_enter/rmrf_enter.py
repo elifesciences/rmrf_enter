@@ -31,7 +31,12 @@ def ymd(string):
     cregex = re.compile(r".*(?P<dt>\d{4}-\d{2}-\d{2}).*")
     matches = cregex.match(string)
     if matches:
-        return matches.groups()[0]
+        val = matches.groups()[0]
+        try:
+            return datetime.strptime(val, '%Y-%m-%d')
+        except ValueError:
+            msg = "ignoring filename that has matching YMD string BUT whose date cannot be parsed from it: %s"
+            LOG.warn(msg, string)
 
 def has_ymd_pattern(string, extractor_fn=ymd):
     "predicate. Returns True given extractor_fn can extract a value"
@@ -40,15 +45,10 @@ def has_ymd_pattern(string, extractor_fn=ymd):
 def older_than_N_days(fname, days=7, extractor_fn=ymd):
     """returns True if the value extractor from the filename
     is older than the given days value"""
-    val = extractor_fn(fname) # looks like: '2015-31-01'
-    try:
-        dtt = datetime.strptime(val, '%Y-%m-%d')
-        now = datetime.now()
-        n_days_ago = timedelta(days=days)
-        return dtt < (now - n_days_ago)
-    except ValueError:
-        msg = "filename has matching YMD string BUT date cannot be parsed from it: %s"
-        LOG.warn(msg, fname)
+    dtt = extractor_fn(fname)
+    now = datetime.now()
+    n_days_ago = timedelta(days=days)
+    return dtt < (now - n_days_ago)
 
 ## actions
 
@@ -56,10 +56,10 @@ def delete(path):
     """delete action deletes a file or directory at the given path.
     if path is to a dir, contents are recursively deleted."""
     if os.path.isfile(path):
-        LOG.info("deleting FILE: " + path)
+        LOG.debug("deleting FILE: " + path)
         return os.unlink(path)
     elif os.path.isdir(path):
-        LOG.info("deleting DIR : " + path)
+        LOG.debug("deleting DIR : " + path)
         return shutil.rmtree(path)
     raise ValueError("cannot delete unhandled path type (??): %s" % path)
 
