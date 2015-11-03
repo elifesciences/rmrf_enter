@@ -1,4 +1,4 @@
-__version__ = "2015.05.06"
+__version__ = "2015.11.03"
 __author__ = "Luke Skibinski <l.skibinski@elifesciences.org"
 __licence__ = "GPLv3"
 __copyright__ = "eLife Sciences"
