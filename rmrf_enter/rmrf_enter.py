@@ -16,52 +16,67 @@ from datetime import datetime, timedelta
 import logging
 
 FORMAT = logging.Formatter("%(created)f - %(levelname)s - %(processName)s - %(name)s - %(message)s")
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.INFO)
 
 # StreamHandler sends to stderr by default
-h = logging.StreamHandler()
-h.setFormatter(FORMAT)
-
-logger.addHandler(h)
+HDLR = logging.StreamHandler()
+HDLR.setFormatter(FORMAT)
+LOG.addHandler(HDLR)
 
 ## common utilities
 
 def ymd(string):
+    "extracts a standard yyyy-mm-dd value from given string or None"
     cregex = re.compile(r".*(?P<dt>\d{4}-\d{2}-\d{2}).*")
     matches = cregex.match(string)
     if matches:
         return matches.groups()[0]
 
-def has_ymd_pattern(string):
-    return ymd(string) != None
+def has_ymd_pattern(string, extractor_fn=ymd):
+    "predicate. Returns True given extractor_fn can extract a value"
+    return extractor_fn(string) != None
 
-def older_than_N_days(fname, days=7):
-    val = ymd(fname) # looks like: '2015-31-01'
+def older_than_N_days(fname, days=7, extractor_fn=ymd):
+    """returns True if the value extractor from the filename
+    is older than the given days value"""
+    val = extractor_fn(fname) # looks like: '2015-31-01'
     try:
-        dt = datetime.strptime(val, '%Y-%m-%d')
+        dtt = datetime.strptime(val, '%Y-%m-%d')
         now = datetime.now()
-        N_days_ago = timedelta(days=days)
-        return dt < (now - N_days_ago)
+        n_days_ago = timedelta(days=days)
+        return dtt < (now - n_days_ago)
     except ValueError:
-        logger.warn("filename has a matching YMD string, but a date cannot be parsed from it: %s" % fname)
-
+        msg = "filename has matching YMD string BUT date cannot be parsed from it: %s"
+        LOG.warn(msg, fname)
 
 ## actions
 
 def delete(path):
+    """delete action deletes a file or directory at the given path.
+    if path is to a dir, contents are recursively deleted."""
     if os.path.isfile(path):
-        logger.info("deleting FILE: " + path)
+        LOG.info("deleting FILE: " + path)
         return os.unlink(path)
     elif os.path.isdir(path):
-        logger.info("deleting DIR : " + path)
+        LOG.info("deleting DIR : " + path)
         return shutil.rmtree(path)
-    raise ValueError("we only delete individual files right now!")
+    raise ValueError("cannot delete unhandled path type (??): %s" % path)
 
 ## do-er
 
-def do_stuff(files_to_delete):
-    for action, dir_root, picker in files_to_delete:
+def do_stuff(files_to_delete, dry_run=False):
+    """given a list of triples (<action>, <dir root>, <predicate>)
+    executes action on each file in dir if predicate"""
+    supported_actions = {'delete': delete}
+    for action_name, dir_root, picker in files_to_delete:
+        assert action_name in supported_actions.keys()
+        action = supported_actions[action_name]
         for fname in os.listdir(dir_root):
+            path = os.path.join(dir_root, fname)
             if picker(fname):
-                eval(action)(os.path.join(dir_root, fname))
+                LOG.info("%s path %s", action_name.upper(), path)
+                if dry_run:
+                    pass
+                else:
+                    action(path)
