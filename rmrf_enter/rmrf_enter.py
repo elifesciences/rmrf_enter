@@ -14,6 +14,7 @@ see `example.py` for example usage of `rmrf_enter.py`"""
 import os, re, shutil
 from datetime import datetime, timedelta
 import logging
+from os.path import join
 
 FORMAT = logging.Formatter("%(created)f - %(levelname)s - %(processName)s - %(name)s - %(message)s")
 LOG = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ HDLR = logging.StreamHandler()
 HDLR.setFormatter(FORMAT)
 LOG.addHandler(HDLR)
 
-## common utilities
+## common utils
 
 def ymd(string):
     "extracts a standard yyyy-mm-dd value from given string or None"
@@ -69,14 +70,24 @@ def do_stuff(files_to_delete, dry_run=False):
     """given a list of triples (<action>, <dir root>, <predicate>)
     executes action on each file in dir if predicate"""
     supported_actions = {'delete': delete}
-    for action_name, dir_root, picker in files_to_delete:
-        assert action_name in supported_actions.keys()
-        action = supported_actions[action_name]
-        for fname in os.listdir(dir_root):
-            path = os.path.join(dir_root, fname)
-            if picker(fname):
-                LOG.info("%s path %s", action_name.upper(), path)
-                if dry_run:
-                    pass
-                else:
-                    action(path)
+
+    def action_wrapper(action):
+        def fn(path):
+            if dry_run:
+                print 'dry run, skipping',path
+                return
+            LOG.info("%s path %s", action_name.__name__.upper(), path)
+            return action(path)
+        return fn
+
+    for action_name, dir_root, fname_or_pickerfn in files_to_delete:
+        assert action_name in supported_actions.keys(), "unspported action %r" % action_name
+        action = action_wrapper(supported_actions[action_name])    
+        picker = fname_or_pickerfn if callable(fname_or_pickerfn) else None
+        dir_contents = sorted(os.listdir(dir_root))
+        if picker:
+            # we've been given a function to call on the file names in dir_root
+            [action(fname) for fname in dir_contents if picker(fname)]
+        else:
+            # we've been given a list of files within dir_root to delete
+            [action(join(dir_root, fname)) for fname in dir_contents]
