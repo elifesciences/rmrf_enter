@@ -12,6 +12,7 @@ future.
 see `example.py` for example usage of `rmrf_enter.py`"""
 
 import os, re, shutil
+from functools import wraps
 from datetime import datetime, timedelta
 import logging
 from os.path import join
@@ -72,22 +73,23 @@ def do_stuff(files_to_delete, dry_run=False):
     supported_actions = {'delete': delete}
 
     def action_wrapper(action):
+        @wraps(action)
         def fn(path):
             if dry_run:
-                print 'dry run, skipping',path
+                print 'dry run, skipping', path
                 return
-            LOG.info("%s path %s", action_name.__name__.upper(), path)
+            LOG.info("%s path %s", action.__name__.upper(), path)
             return action(path)
         return fn
 
-    for action_name, dir_root, fname_or_pickerfn in files_to_delete:
+    for action_name, dir_root, fname_list_or_pickerfn in files_to_delete:
         assert action_name in supported_actions.keys(), "unspported action %r" % action_name
-        action = action_wrapper(supported_actions[action_name])    
-        picker = fname_or_pickerfn if callable(fname_or_pickerfn) else None
+        action = action_wrapper(supported_actions[action_name])
+        picker = fname_list = None
         dir_contents = sorted(os.listdir(dir_root))
-        if picker:
-            # we've been given a function to call on the file names in dir_root
-            [action(fname) for fname in dir_contents if picker(fname)]
+        if callable(fname_list_or_pickerfn):
+            picker = fname_list_or_pickerfn
+            fname_list = filter(picker, dir_contents)
         else:
-            # we've been given a list of files within dir_root to delete
-            [action(join(dir_root, fname)) for fname in dir_contents]
+            fname_list = fname_list_or_pickerfn
+        return [action(join(dir_root, fname)) for fname in fname_list]
